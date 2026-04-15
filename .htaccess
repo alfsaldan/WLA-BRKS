@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /wla/
+
+    # If the requested resource doesn't exist as a file or directory,
+    # route the request through index.php (CodeIgniter front controller)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L]
+</IfModule>
+
+# Note: Don't use <Directory> or other server config directives in .htaccess
+# as they are not allowed and will cause 500 Internal Server Error.

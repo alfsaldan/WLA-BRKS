@@ -1,0 +1,26 @@
+/* WLA custom styles - glassmorphism, soft shadows, rounded cards */
+:root{
+  --glass-bg: rgba(255,255,255,0.6);
+  --glass-border: rgba(255,255,255,0.5);
+}
+
+body.bg-gradient{
+  background: linear-gradient(135deg,#e9f0ff 0%, #f3f9ff 100%);
+}
+
+.glass{
+  background: linear-gradient( rgba(255,255,255,0.55), rgba(255,255,255,0.35) );
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 6px 18px rgba(18,38,63,0.06);
+  backdrop-filter: blur(8px) saturate(120%);
+}
+
+.login-card{ border-radius: 16px; }
+
+.card.glass p, .card.glass h5 { color: #16325c; }
+
+/* responsive tweaks */
+@media (max-width: 767px){
+  .col-md-2 { display: none !important; }
+}
