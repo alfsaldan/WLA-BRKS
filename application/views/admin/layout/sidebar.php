@@ -9,7 +9,7 @@ $monitoring_ind_active = ($current_menu == 'monitoring' && $current_submenu == '
 $wla_hasil_active = ($current_menu == 'monitoring' && $current_submenu == 'hasil') ? 'active' : '';
 ?>
 <!-- Desktop Sidebar (Hidden di Mobile) -->
-<div class="col-md-2 d-none d-md-block">
+<div class="col-md-2 d-none d-md-block d-print-none">
     <div class="card glass p-2 sticky-top" style="top: 1rem; min-height: calc(100vh - 100px);">
         <ul class="nav nav-pills flex-column w-100">
             <li class="nav-item mb-1">
@@ -66,7 +66,7 @@ $wla_hasil_active = ($current_menu == 'monitoring' && $current_submenu == 'hasil
 </div>
 
 <!-- Mobile Offcanvas Sidebar (Tampil saat tombol hamburger diklik) -->
-<div class="offcanvas offcanvas-start glass border-0 shadow-sm" tabindex="-1" id="sidebarMenu"
+<div class="offcanvas offcanvas-start glass border-0 shadow-sm d-print-none" tabindex="-1" id="sidebarMenu"
     aria-labelledby="sidebarMenuLabel">
     <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title fw-bold text-primary" id="sidebarMenuLabel">Menu Navigasi</h5>

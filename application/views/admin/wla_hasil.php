@@ -32,6 +32,10 @@
 <?php if(isset($summary) && !empty($summary)): ?>
 <div class="card bg-white p-4 shadow-sm border-0 mb-4">
     <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-primary me-2"></i>Ringkasan Status Beban Kerja</h5>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0"></h5>
+        <button class="btn btn-sm btn-outline-success" onclick="window.print()"><i class="bi bi-printer me-2"></i>Cetak Laporan</button>
+    </div>
     <div class="row">
         <div class="col-lg-8">
             <div class="table-responsive">
@@ -103,7 +107,6 @@
 <div class="card bg-white p-4 shadow-sm border-0 mb-5" style="border-radius: 0; overflow-x: auto;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold mb-0">Tabel Hasil WLA</h5>
-        <button class="btn btn-sm btn-outline-success" onclick="window.print()"><i class="bi bi-printer me-2"></i>Cetak Laporan</button>
     </div>
 
     <table class="table table-bordered align-middle table-hover" style="font-size: 0.85rem; border-color: #dee2e6;">

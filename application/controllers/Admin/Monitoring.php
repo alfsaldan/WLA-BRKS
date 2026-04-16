@@ -69,6 +69,30 @@ class Monitoring extends CI_Controller {
                     }
                 }
                 $data['all_volumes'] = $agg_volumes;
+
+                // --- TAMBAHAN UNTUK REKAP PER BULAN (JAN - DES) ---
+                $monthly_volumes_jabatan = [];
+                $task_ids = array_column($all_tugas, 'id_tugas');
+                if (!empty($task_ids)) {
+                    $vols_query = $this->db->select('id_tugas, bulan, SUM(volume) as total_vol')
+                                           ->where_in('id_tugas', $task_ids)
+                                           ->where('tahun', $data['filter_tahun'])
+                                           ->group_by('id_tugas, bulan')
+                                           ->get('wla_beban_kerja')
+                                           ->result();
+                    foreach ($vols_query as $vq) {
+                        if (isset($map_id_to_name[$vq->id_tugas]) && isset($map_name_to_template_id[$map_id_to_name[$vq->id_tugas]])) {
+                            $template_id = $map_name_to_template_id[$map_id_to_name[$vq->id_tugas]];
+                            $b = (int)$vq->bulan;
+                            if (!isset($monthly_volumes_jabatan[$template_id][$b])) {
+                                $monthly_volumes_jabatan[$template_id][$b] = 0;
+                            }
+                            $monthly_volumes_jabatan[$template_id][$b] += $vq->total_vol;
+                        }
+                    }
+                }
+                $data['monthly_volumes_jabatan'] = $monthly_volumes_jabatan;
+
             } else {
                 $data['tugas'] = $this->UraianTugas_model->get_by_filter($data['filter_tahun'], $data['filter_bulan'], $data['filter_cabang'], $data['filter_unit'], $data['filter_jabatan']);
                 $data['all_volumes'] = $this->BebanKerja_model->get_all_volumes($data['filter_tahun'], $data['filter_bulan']);
@@ -234,10 +258,20 @@ class Monitoring extends CI_Controller {
                     $kebutuhan = null;
                     $ej = null;
                 } else {
-                    $status = 'Normal'; $ket_status = 'Ideal';
-                    if ($ej > 1.20) { $status = 'Overload'; $ket_status = 'Perlu penambahan SDM atau review proses bisnis'; }
-                    elseif ($ej >= 1.01) { $status = 'Stretch'; $ket_status = 'Bisa diatasi dengan manajemen waktu atau pelatihan efisiensi'; }
-                    elseif ($ej < 0.80) { $status = 'Underload'; $ket_status = 'Alihkan sebagian tugas lain atau review distribusi kerja'; }
+                    // Sesuai formula: =IF(EJ<0.7;"Underload";IF(AND(EJ>=0.7;EJ<1);"Normal";IF(AND(EJ>=1;EJ<1.3);"Stretch";"Overload")))
+                    if ($ej < 0.7) {
+                        $status = 'Underload';
+                        $ket_status = 'Alihkan sebagian tugas lain atau review distribusi kerja';
+                    } elseif ($ej < 1) { // Antara 0.7 dan 0.99
+                        $status = 'Normal';
+                        $ket_status = 'Ideal';
+                    } elseif ($ej < 1.3) { // Antara 1.0 dan 1.29
+                        $status = 'Stretch';
+                        $ket_status = 'Bisa diatasi dengan manajemen waktu atau pelatihan efisiensi';
+                    } else { // >= 1.3
+                        $status = 'Overload';
+                        $ket_status = 'Perlu penambahan SDM atau review proses bisnis';
+                    }
                 }
 
                 $results[] = [

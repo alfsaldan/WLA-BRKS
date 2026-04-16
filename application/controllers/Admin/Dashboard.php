@@ -107,12 +107,19 @@ class Dashboard extends CI_Controller {
             $allowance_pct = (float)($j->allowance ?? 0);
             $fte = ($total_rpm_yearly * (1 + $allowance_pct / 100)) / $wke_default;
             $ej = ($emp_count > 0) ? $fte / $emp_count : 0;
-
-            $status = 'Normal';
-            if ($ej > 1.20) { $status = 'Overload'; }
-            elseif ($ej >= 1.01) { $status = 'Stretch'; }
-            elseif ($ej < 0.80 && $fte > 0) { $status = 'Underload'; }
-            elseif ($fte == 0) { $status = 'N/A'; }
+            
+            $status = 'N/A';
+            if ($fte > 0) {
+                if ($ej < 0.7) {
+                    $status = 'Underload';
+                } elseif ($ej < 1) { // >= 0.7
+                    $status = 'Normal';
+                } elseif ($ej < 1.3) { // >= 1
+                    $status = 'Stretch';
+                } else { // >= 1.3
+                    $status = 'Overload';
+                }
+            }
 
             $wla_results[] = ['nama_jabatan' => $j->nama_jabatan, 'ej' => $ej, 'status' => $status, 'fte' => $fte, 'pegawai' => count($pegawai_list)];
         }

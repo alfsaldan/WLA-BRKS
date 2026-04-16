@@ -1,4 +1,4 @@
-<div class="row mb-4">
+<div class="row mb-4 d-print-none">
   <div class="col-12">
     <h3 class="mb-0 text-primary"><i class="bi bi-person-bounding-box me-2"></i>Monitoring Individu</h3>
     <small class="text-muted">Laporan rekapitulasi Analisis Beban Kerja per Pegawai berdasarkan NIP (Januari - Desember)</small>
@@ -6,7 +6,7 @@
 </div>
 
 <!-- Filter Form -->
-<form method="GET" action="<?= site_url('admin/monitoring/individu') ?>" class="card glass p-3 mb-4 border-0 shadow-sm">
+<form method="GET" action="<?= site_url('admin/monitoring/individu') ?>" class="card glass p-3 mb-4 border-0 shadow-sm d-print-none">
     <div class="row g-3 align-items-end">
         <div class="col-md-3">
             <label class="form-label text-muted small">NIP Pegawai</label>
@@ -35,7 +35,10 @@
     
     <!-- Laporan Header -->
     <div class="mb-4">
-        <h4 class="text-center fw-bold mb-4" style="letter-spacing: 2px;">WORK LOAD ANALYSIS (INDIVIDU)</h4>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold mb-0" style="letter-spacing: 2px;">WORK LOAD ANALYSIS (INDIVIDU)</h4>
+            <button class="btn btn-sm btn-outline-success d-print-none" onclick="window.print()"><i class="bi bi-printer me-2"></i>Cetak Laporan</button>
+        </div>
         <table class="table table-sm table-borderless fw-bold" style="width: auto;">
             <tr><td width="30">1</td><td width="200">NAMA PEGAWAI / NIP</td><td width="10">:</td><td class="text-primary"><?= strtoupper($pegawai->nama) ?> / <?= $pegawai->nip ?></td></tr>
             <tr><td>2</td><td>NAMA JABATAN</td><td>:</td><td><?= strtoupper($jabatan_info->nama_jabatan ?? '-') ?></td></tr>

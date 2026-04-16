@@ -17,6 +17,28 @@
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Custom Print Styles -->
+    <style>
+        @media print {
+            /* 1. Arahkan browser untuk menggunakan orientasi landscape & atur margin */
+            @page {
+                size: landscape;
+                margin: 1cm;
+            }
+
+            body {
+                font-size: 10pt; /* 2. Perkecil font global agar tabel lebih muat */
+            }
+
+            /* 3. Hapus shadow, border, dan overflow pada card agar konten tidak terpotong */
+            .card {
+                box-shadow: none !important;
+                border: 0 !important;
+                overflow: visible !important;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gradient">
 
