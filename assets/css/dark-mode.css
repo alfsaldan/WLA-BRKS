@@ -1,0 +1,180 @@
+/* Dark Mode Styles */
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #e0e0e0;
+}
+
+body.dark-mode .glass {
+    background: rgba(30, 30, 30, 0.75) !important;
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.125) !important;
+    color: #e0e0e0;
+}
+
+body.dark-mode .card,
+body.dark-mode .modal-content {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4, body.dark-mode h5, body.dark-mode h6,
+body.dark-mode .text-dark, body.dark-mode .fw-bold {
+    color: #ffffff !important;
+}
+
+body.dark-mode .text-muted {
+    color: #a0a0a0 !important;
+}
+
+body.dark-mode .text-primary {
+    color: #58a6ff !important;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
+}
+
+body.dark-mode .form-control::placeholder {
+    color: #888;
+}
+
+body.dark-mode .table {
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+body.dark-mode .table-hover > tbody > tr:hover > * {
+    background-color: rgba(255, 255, 255, 0.07);
+    color: #fff;
+}
+
+body.dark-mode .table-bordered > :not(caption) > * > * {
+    border-color: #444;
+}
+
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: rgba(255, 255, 255, 0.05);
+    color: #e0e0e0;
+}
+
+/* Fix for table header/footer/row with .bg-light or .table-light */
+body.dark-mode .table-light > :not(caption) > * > *,
+body.dark-mode .table > thead.bg-light > tr > th,
+body.dark-mode .table > tfoot.bg-light > tr > td,
+body.dark-mode .table > tbody > tr.bg-light > * {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+}
+
+/* Handle elements that have bg-white utility class */
+body.dark-mode .bg-white {
+    background-color: #2c2c2c !important;
+    color: #e0e0e0;
+}
+
+/* General border color */
+body.dark-mode .border,
+body.dark-mode .border-top,
+body.dark-mode .border-bottom,
+body.dark-mode .border-start,
+body.dark-mode .border-end {
+    border-color: #444 !important;
+}
+
+body.dark-mode .list-group-item {
+    background-color: transparent;
+    border-color: #444;
+}
+
+body.dark-mode .list-group-item-action:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+body.dark-mode .nav-tabs .nav-link {
+    border-color: #444;
+    color: #a0a0a0;
+}
+
+body.dark-mode .nav-tabs .nav-link.active {
+    background-color: #121212;
+    border-color: #555 #555 #121212;
+    color: #fff;
+}
+
+body.dark-mode .input-group-text {
+    background-color: #2c2c2c;
+    border-color: #555;
+    color: #a0a0a0;
+}
+
+body.dark-mode .progress {
+    background-color: #2c2c2c;
+}
+
+/* Dark Mode Toggler - Slide Out Style */
+#darkModeSlider {
+    position: fixed;
+    top: 50%;
+    right: -52px; /* Sembunyikan bagian tombol utama */
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    z-index: 9999;
+    transition: right 0.3s ease-in-out;
+}
+
+#darkModeSlider.active {
+    right: 0; /* Tampilkan seluruh panel */
+}
+
+#darkModeHandle {
+    width: 25px;
+    height: 60px;
+    background-color: #0d6efd;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px 0 0 10px;
+    box-shadow: -2px 2px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#darkModeButton {
+    width: 52px;
+    height: 52px;
+    background-color: #f8f9fa;
+    color: #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border: 1px solid #dee2e6;
+    border-left: none;
+    cursor: pointer;
+}
+
+body.dark-mode #darkModeHandle {
+    background-color: #ffc107;
+    color: #121212;
+}
+
+body.dark-mode #darkModeButton {
+    background-color: #2c2c2c;
+    color: #ffc107;
+    border-color: #555;
+}

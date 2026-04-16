@@ -17,5 +17,11 @@
     // custom JS placeholder
   });
 </script>
+    <!-- ... script-script lain yang sudah ada ... -->
+
+    <!-- Dark Mode Toggler -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/dark-mode.css') ?>">
+    <script src="<?= base_url('assets/css/dark-mode-toggler.js') ?>" defer></script>
+
 </body>
 </html>
