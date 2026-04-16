@@ -59,40 +59,15 @@ class UraianTugas extends CI_Controller {
             if ($p_row) $nama_parent = strtolower(trim($p_row->nama_tugas));
         }
 
-        // Loop 12 bulan untuk menerapkan Uraian Tugas ke seluruh bulan di tahun tersebut
-        for ($i = 1; $i <= 12; $i++) {
-            $m = str_pad($i, 2, '0', STR_PAD_LEFT);
-            
-            // Hindari duplikat
-            $cek = $this->db->where([
-                'tahun' => $tahun, 'bulan' => $m,
-                'id_cabang' => $id_cabang, 'id_unit' => $id_unit, 'id_jabatan' => $id_jabatan,
-                'nama_tugas' => $nama_tugas
-            ])->get('wla_uraian_tugas')->row();
+        $this->UraianTugas_model->insert([
+            'id_cabang' => $id_cabang, 'id_unit' => $id_unit, 'id_jabatan' => $id_jabatan,
+            'tahun' => $tahun, 'bulan' => $bulan_input, 'id_parent' => $id_parent_input,
+            'nama_tugas' => $nama_tugas, 'output_pekerjaan' => $output_pekerjaan,
+            'standar_waktu' => $standar_waktu, 'keterangan' => $keterangan,
+            'tindakan_petugas' => $tindakan_petugas, 'is_active' => $is_active
+        ]);
 
-            if (!$cek) {
-                // Cari ID parent di bulan yang bersangkutan
-                $current_parent_id = NULL;
-                if (!empty($nama_parent)) {
-                    $p_cek = $this->db->where([
-                        'tahun' => $tahun, 'bulan' => $m,
-                        'id_cabang' => $id_cabang, 'id_unit' => $id_unit, 'id_jabatan' => $id_jabatan,
-                        'LOWER(TRIM(nama_tugas))' => $nama_parent
-                    ])->get('wla_uraian_tugas')->row();
-                    if ($p_cek) $current_parent_id = $p_cek->id_tugas;
-                }
-
-                $this->UraianTugas_model->insert([
-                    'id_cabang' => $id_cabang, 'id_unit' => $id_unit, 'id_jabatan' => $id_jabatan,
-                    'tahun' => $tahun, 'bulan' => $m, 'id_parent' => $current_parent_id,
-                    'nama_tugas' => $nama_tugas, 'output_pekerjaan' => $output_pekerjaan,
-                    'standar_waktu' => $standar_waktu, 'keterangan' => $keterangan,
-                    'tindakan_petugas' => $tindakan_petugas, 'is_active' => $is_active
-                ]);
-            }
-        }
-
-        $this->session->set_flashdata('success', 'Master Uraian Tugas berhasil ditambahkan dan otomatis diterapkan ke seluruh bulan.');
+        $this->session->set_flashdata('success', 'Master Uraian Tugas berhasil ditambahkan untuk bulan ini.');
         redirect("admin/uraiantugas?tahun={$tahun}&bulan={$bulan_input}&id_cabang={$id_cabang}&id_unit={$id_unit}&id_jabatan={$id_jabatan}");
     }
 
@@ -109,14 +84,9 @@ class UraianTugas extends CI_Controller {
         $old_task = $this->db->where('id_tugas', $id)->get('wla_uraian_tugas')->row();
 
         if ($old_task) {
-            // Update semua bulan yang namanya sama dengan old_task agar sinkron
-            $this->db->where([
-                'tahun' => $old_task->tahun,
-                'id_cabang' => $old_task->id_cabang,
-                'id_unit' => $old_task->id_unit,
-                'id_jabatan' => $old_task->id_jabatan,
-                'nama_tugas' => $old_task->nama_tugas
-            ])->update('wla_uraian_tugas', [
+            // Hanya update untuk tugas di bulan terkait
+            $this->db->where('id_tugas', $id)->update('wla_uraian_tugas', [
+                'id_parent' => $data['id_parent'],
                 'nama_tugas' => $data['nama_tugas'],
                 'output_pekerjaan' => $data['output_pekerjaan'],
                 'standar_waktu' => $data['standar_waktu'],
@@ -124,19 +94,27 @@ class UraianTugas extends CI_Controller {
                 'tindakan_petugas' => $data['tindakan_petugas'],
                 'is_active' => $data['is_active']
             ]);
-            
-            // Khusus untuk bulan saat ini (yang di-edit dari modal), update id_parent-nya juga (karena parent beda id tiap bulan)
-            $this->db->where('id_tugas', $id)->update('wla_uraian_tugas', ['id_parent' => $data['id_parent']]);
         }
 
-        $this->session->set_flashdata('success', 'Master Uraian Tugas berhasil diperbarui dan disinkronisasi ke seluruh bulan.');
+        $this->session->set_flashdata('success', 'Master Uraian Tugas berhasil diperbarui.');
         redirect($_SERVER['HTTP_REFERER']);
     }
 
     public function delete($id) {
-        // Soft Delete: Hanya merubah is_active menjadi 0
-        $this->UraianTugas_model->delete($id);
-        $this->session->set_flashdata('success', 'Uraian Tugas dinonaktifkan (Soft Delete).');
+        $task = $this->db->where('id_tugas', $id)->get('wla_uraian_tugas')->row();
+        
+        if ($task) {
+            // Jika yang dihapus adalah sub-tugas (memiliki parent), maka target hapus dialihkan ke parentnya
+            $target_id = !empty($task->id_parent) ? $task->id_parent : $id;
+
+            // Hapus semua sub-tugas (anak) dari target terlebih dahulu untuk mencegah orphaned data
+            $this->db->where('id_parent', $target_id)->delete('wla_uraian_tugas');
+            
+            // Hapus tugas induknya (parent)
+            $this->db->where('id_tugas', $target_id)->delete('wla_uraian_tugas');
+        }
+
+        $this->session->set_flashdata('success', 'Uraian Tugas berhasil dihapus permanen.');
         redirect($_SERVER['HTTP_REFERER']);
     }
 
@@ -216,6 +194,7 @@ class UraianTugas extends CI_Controller {
         $file_mimes = ['application/octet-stream', 'application/vnd.ms-excel', 'application/x-csv', 'text/x-csv', 'text/csv', 'application/csv', 'application/excel', 'application/vnd.msexcel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
         
         $tahun = $this->input->post('tahun');
+        $bulan = $this->input->post('bulan');
         $id_cabang = $this->input->post('id_cabang');
         $id_unit = $this->input->post('id_unit');
         $id_jabatan = $this->input->post('id_jabatan');
@@ -223,65 +202,191 @@ class UraianTugas extends CI_Controller {
         if(isset($_FILES['file_excel']['name']) && in_array($_FILES['file_excel']['type'], $file_mimes)) {
             $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($_FILES['file_excel']['tmp_name']);
             $spreadsheet = $reader->load($_FILES['file_excel']['tmp_name']);
-            $sheetData = $spreadsheet->getActiveSheet()->toArray();
+            $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, true, false); // Read raw values, not formatted.
 
-            // Auto-detect header columns mapping intelligently
-            $header = ['uraian' => 1, 'output' => 2, 'standar' => 16, 'keterangan' => 18];
-            foreach($sheetData as $key => $row) {
-                if ($key < 4) {
-                    foreach($row as $idx => $val) {
-                        $v = strtolower(trim((string)$val));
-                        if (strpos($v, 'uraian') !== false) $header['uraian'] = $idx;
-                        if (strpos($v, 'hasil') !== false || strpos($v, 'output') !== false) $header['output'] = $idx;
-                        if (strpos($v, 'standar waktu') !== false || strpos($v, 'waktu penyelesaian') !== false) $header['standar'] = $idx;
-                        if (strpos($v, 'keterangan') !== false) $header['keterangan'] = $idx;
+            // --- REFINED HEADER AND DATA AREA DETECTION ---
+            $header = ['uraian' => -1, 'output' => -1, 'standar' => -1, 'keterangan' => -1];
+            $header_row_index = -1;
+            $start_row = -1;
+
+            // 1. Find the most likely header row (contains at least 2 keywords)
+            for ($i = 0; $i < 25 && $i < count($sheetData); $i++) {
+                $row = $sheetData[$i];
+                $found_count = 0;
+                if (is_array($row)) {
+                    foreach ($row as $cell_val) {
+                        $v = strtolower(trim((string)$cell_val));
+                        if (strpos($v, 'uraian') !== false && strpos($v, 'tugas') !== false) $found_count++;
+                        if (strpos($v, 'standar') !== false && strpos($v, 'waktu') !== false) $found_count++;
+                        if (strpos($v, 'hasil') !== false && (strpos($v, 'kerja') !== false || strpos($v, 'output') !== false)) $found_count++;
                     }
                 }
+                if ($found_count >= 2) {
+                    $header_row_index = $i;
+                }
+            }
+
+            if ($header_row_index === -1) {
+                $this->session->set_flashdata('error', 'Gagal Import: Tidak dapat menemukan baris header yang valid (cth: Uraian Tugas, Standar Waktu) di dalam file Excel.');
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+
+            // 2. Map column indices from the found header row
+            foreach ($sheetData[$header_row_index] as $col_index => $cell_val) {
+                $v = strtolower(trim((string)$cell_val));
+                if ($header['uraian'] == -1 && strpos($v, 'uraian') !== false && strpos($v, 'tugas') !== false) $header['uraian'] = $col_index;
+                if ($header['output'] == -1 && (strpos($v, 'hasil') !== false || strpos($v, 'output') !== false)) $header['output'] = $col_index;
+                if ($header['standar'] == -1 && (strpos($v, 'standar') !== false && strpos($v, 'waktu') !== false)) $header['standar'] = $col_index;
+                if ($header['keterangan'] == -1 && strpos($v, 'keterangan') !== false) $header['keterangan'] = $col_index;
+            }
+
+            // 3. Find the actual start of data (first row with a number in the first column)
+            for ($i = $header_row_index + 1; $i < count($sheetData); $i++) {
+                $first_cell_val = isset($sheetData[$i][0]) ? trim((string)$sheetData[$i][0]) : '';
+                if (is_numeric($first_cell_val) && (int)$first_cell_val > 0) {
+                    $start_row = $i;
+                    break;
+                }
+            }
+
+            if ($start_row === -1) {
+                $this->session->set_flashdata('error', 'Gagal Import: Header ditemukan, namun tidak ada baris data yang valid (baris dimulai dengan angka).');
+                redirect($_SERVER['HTTP_REFERER']);
             }
 
             $success_count = 0;
-            $current_parent_id = []; // array mapping untuk 12 bulan
+            $current_parent_id = NULL; // ID parent untuk bulan ini
+            $prefix_stack = []; // Stack untuk menyimpan konteks hirarki teks
 
-            foreach($sheetData as $key => $row) {
-                $no_col = trim((string)($row[0] ?? ''));
-                $uraian = trim((string)($row[$header['uraian']] ?? ''));
-                $output = trim((string)($row[$header['output']] ?? ''));
+            // 4. Process rows from the data start row
+            for ($key = $start_row; $key < count($sheetData); $key++) {
+                $row = $sheetData[$key];
+
+                // Gabungkan kolom-kolom sebelum Uraian sebagai NO
+                $no_parts = [];
+                for ($col = 0; $col < $header['uraian']; $col++) {
+                    $val = trim((string)($row[$col] ?? ''));
+                    if ($val !== '') $no_parts[] = $val;
+                }
+                $no_col = implode(' ', $no_parts);
+
+                // Gabungkan kolom Uraian hingga sebelum Output (mengatasi Uraian yang di-indent multi-kolom)
+                $uraian_parts = [];
+                $indent_level = 0;
+                $found_text = false;
+                $end_col = ($header['output'] > $header['uraian']) ? $header['output'] : $header['uraian'] + 1;
+                for ($col = $header['uraian']; $col < $end_col; $col++) {
+                    $raw_val = (string)($row[$col] ?? '');
+                    $val = trim($raw_val);
+                    if ($val !== '') {
+                        $uraian_parts[] = $val;
+                        if (!$found_text) {
+                            // Hitung level indentasi dari spasi di awal kata atau posisi kolom Excel
+                            preg_match('/^\s*/', $raw_val, $spaces);
+                            $space_count = strlen(str_replace("\t", "    ", $spaces[0] ?? ''));
+                            $indent_level = ($col - $header['uraian']) * 10 + $space_count;
+                            $found_text = true;
+                        }
+                    }
+                }
+                $uraian = implode(' ', $uraian_parts);
                 
-                // Skip baris kosong atau baris judul Header
-                if (empty($uraian) || strtolower($uraian) == 'uraian tugas') continue;
-
-                $standar_waktu = trim((string)($row[$header['standar']] ?? ''));
-                if (!is_numeric($standar_waktu)) {
-                    if (is_numeric(trim((string)($row[$header['standar'] - 1] ?? '')))) $standar_waktu = trim((string)($row[$header['standar'] - 1]));
-                    elseif (is_numeric(trim((string)($row[$header['standar'] + 1] ?? '')))) $standar_waktu = trim((string)($row[$header['standar'] + 1]));
-                    else $standar_waktu = NULL;
+                $output = ($header['output'] > -1) ? trim((string)($row[$header['output']] ?? '')) : '';
+                
+                $uraian_lower = strtolower(trim($uraian));
+                $no_col_lower = strtolower($no_col);
+                
+                // Break loop jika sudah mencapai akhir tabel (Kebutuhan Pegawai / Total)
+                if (strpos($uraian_lower, 'kebutuhan pegawai') !== false || strpos($no_col_lower, 'kebutuhan pegawai') !== false) {
+                    break;
                 }
                 
-                $keterangan = trim((string)($row[$header['keterangan']] ?? ''));
+                // Skip baris kosong atau header tersisa
+                if (empty($uraian_lower) || strlen($uraian_lower) <= 1 || strpos($uraian_lower, 'uraian tugas') !== false) {
+                    continue;
+                }
 
-                // Deteksi Parent/Child dari Penomoran
-                $is_parent = is_numeric(preg_replace('/[^0-9]/', '', $no_col)) || (empty($no_col) && empty($current_parent_id)); 
+                // Extract angka standar waktu dengan regex agar aman
+                $standar_waktu = ($header['standar'] > -1) ? trim((string)($row[$header['standar']] ?? '')) : '';
+                $sw_val = null;
+                if ($standar_waktu !== '') {
+                    if (preg_match('/[0-9]+(?:\.[0-9]+)?/', str_replace(',', '.', $standar_waktu), $matches)) {
+                        $sw_val = $matches[0];
+                    }
+                }
+                // Jika standar waktu kosong, coba geser kolom +/- 1 (seringkali format excel merger kolom meleset)
+                if ($sw_val === null && $header['standar'] > -1) {
+                    $sw_min1 = trim((string)($row[$header['standar'] - 1] ?? ''));
+                    $sw_plus1 = trim((string)($row[$header['standar'] + 1] ?? ''));
+                    if (is_numeric($sw_min1) && preg_match('/[0-9]+(?:\.[0-9]+)?/', str_replace(',', '.', $sw_min1), $matches)) {
+                        $sw_val = $matches[0];
+                    } elseif (is_numeric($sw_plus1) && preg_match('/[0-9]+(?:\.[0-9]+)?/', str_replace(',', '.', $sw_plus1), $matches)) {
+                        $sw_val = $matches[0];
+                    }
+                }
+                
+                $keterangan = ($header['keterangan'] > -1) ? trim((string)($row[$header['keterangan']] ?? '')) : '';
 
-                for ($i = 1; $i <= 12; $i++) {
-                    $m = str_pad($i, 2, '0', STR_PAD_LEFT);
-                    $cek = $this->db->where(['tahun' => $tahun, 'bulan' => $m, 'id_cabang' => $id_cabang, 'id_unit' => $id_unit, 'id_jabatan' => $id_jabatan, 'nama_tugas' => $uraian])->get('wla_uraian_tugas')->row();
+                // Deteksi Parent/Child dari Penomoran di kolom pertama (NO)
+                $is_parent = false;
+                if (preg_match('/^[0-9]+$/', $no_col)) {
+                    $is_parent = true;
+                    $prefix_stack = []; // Reset hirarki jika masuk ke Parent baru
+                } else if (empty($current_parent_id)) {
+                    $is_parent = true; // Fallback parent pertama
+                    $prefix_stack = [];
+                }
+
+                // Bersihkan abjad/poin di awal uraian tugas
+                $uraian_bersih = preg_replace('/^[a-zA-Z][\.\)]?\s+/', '', $uraian);
+                $uraian_bersih = preg_replace('/^[\-\*]\s+/', '', $uraian_bersih);
+
+                // Cek apakah baris ini adalah header grup/kategori (TIDAK ADA standar waktu dan BUKAN parent utama)
+                $is_group_header = ($sw_val === null || $sw_val === '') && !$is_parent;
+
+                if ($is_group_header && !empty(trim($uraian_bersih))) {
+                    // Simpan sebagai prefix di level kedalamannya, hapus konteks level yang lebih dalam
+                    $prefix_stack[$indent_level] = trim($uraian_bersih);
+                    foreach (array_keys($prefix_stack) as $k) {
+                        if ($k > $indent_level) unset($prefix_stack[$k]);
+                    }
+                    continue; // Skip insert ke DB, karena baris ini hanya sebagai judul penyambung konteks
+                }
+
+                // Jika ini adalah Sub-Tugas (Child), gabungkan prefix hirarki yang ada agar konteks tugasnya jelas
+                if (!$is_parent && !empty(trim($uraian_bersih))) {
+                    ksort($prefix_stack); // Pastikan urut dari level teratas
+                    $prefix_str = implode(' - ', $prefix_stack);
+                    $uraian = !empty($prefix_str) ? $prefix_str . ' - ' . trim($uraian_bersih) : trim($uraian_bersih);
+                } else {
+                    $uraian = trim($uraian);
+                }
+
+                // Hanya proses jika Uraian Tugas valid
+                if (!empty($uraian)) {
+                    // Tambahkan id_parent ke dalam pengecekan duplikat
+                    $cek = $this->db->where([
+                        'tahun' => $tahun, 'bulan' => $bulan, 
+                        'id_cabang' => $id_cabang, 'id_unit' => $id_unit, 'id_jabatan' => $id_jabatan, 
+                        'nama_tugas' => $uraian, 'id_parent' => $is_parent ? NULL : $current_parent_id
+                    ])->get('wla_uraian_tugas')->row();
 
                     if (!$cek) {
                         $this->db->insert('wla_uraian_tugas', [
-                            'id_cabang' => $id_cabang, 'id_unit' => $id_unit, 'id_jabatan' => $id_jabatan, 'tahun' => $tahun, 'bulan' => $m, 
-                            'id_parent' => $is_parent ? NULL : (isset($current_parent_id[$m]) ? $current_parent_id[$m] : NULL),
+                            'id_cabang' => $id_cabang, 'id_unit' => $id_unit, 'id_jabatan' => $id_jabatan, 'tahun' => $tahun, 'bulan' => $bulan, 
+                            'id_parent' => $is_parent ? NULL : $current_parent_id,
                             'nama_tugas' => $uraian, 'output_pekerjaan' => empty($output) ? NULL : $output,
-                            'standar_waktu' => $standar_waktu, 'keterangan' => empty($keterangan) ? NULL : $keterangan,
+                            'standar_waktu' => $sw_val, 'keterangan' => empty($keterangan) ? NULL : $keterangan,
                             'is_active' => 1
                         ]);
-                        if ($is_parent) $current_parent_id[$m] = $this->db->insert_id();
+                        if ($is_parent) $current_parent_id = $this->db->insert_id();
                     } else {
-                        if ($is_parent) $current_parent_id[$m] = $cek->id_tugas;
+                        if ($is_parent) $current_parent_id = $cek->id_tugas;
                     }
+                    $success_count++;
                 }
-                $success_count++;
             }
-            $this->session->set_flashdata('success', "Berhasil mengimport {$success_count} baris Uraian Tugas dan otomatis diterapkan ke seluruh bulan di tahun {$tahun}.");
+            $this->session->set_flashdata('success', "Berhasil mengimport {$success_count} baris Uraian Tugas untuk bulan ini.");
         } else {
             $this->session->set_flashdata('error', 'Gagal Import: File tidak valid atau format tidak sesuai (.xlsx)');
         }

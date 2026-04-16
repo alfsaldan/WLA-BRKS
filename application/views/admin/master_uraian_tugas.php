@@ -118,7 +118,7 @@
                     </td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-warning text-dark mb-1" data-bs-toggle="modal" data-bs-target="#editTugasModal<?= $t->id_tugas ?>" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                        <a href="<?= site_url('admin/uraiantugas/delete/'.$t->id_tugas) ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Hapus (Nonaktifkan)"><i class="bi bi-trash"></i></a>
+                        <a href="<?= site_url('admin/uraiantugas/delete/'.$t->id_tugas) ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Hapus Permanen"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
 
@@ -135,7 +135,7 @@
                     <td><?php if($c->is_active == 1): ?><span class="badge bg-success">Aktif</span><?php else: ?><span class="badge bg-danger">Nonaktif</span><?php endif; ?></td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-warning text-dark mb-1" data-bs-toggle="modal" data-bs-target="#editTugasModal<?= $c->id_tugas ?>" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                        <a href="<?= site_url('admin/uraiantugas/delete/'.$c->id_tugas) ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Hapus (Nonaktifkan)"><i class="bi bi-trash"></i></a>
+                        <a href="<?= site_url('admin/uraiantugas/delete/'.$c->id_tugas) ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Hapus Permanen"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
                 <?php endif; endforeach; ?>
@@ -241,7 +241,7 @@
           <div class="row">
               <div class="col-md-6 mb-3">
                   <label class="form-label text-muted">Tindakan Petugas</label>
-                  <select name="tindakan_petugas" class="form-select"><option value="">-- Pilih --</option><option value="Observasi" <?= strtolower($t->tindakan_petugas) == 'observasi' ? 'selected' : '' ?>>Observasi</option><option value="Konfirmasi" <?= strtolower($t->tindakan_petugas) == 'konfirmasi' ? 'selected' : '' ?>>Konfirmasi</option></select>
+                  <select name="tindakan_petugas" class="form-select"><option value="">-- Pilih --</option><option value="Observasi" <?= strtolower($t->tindakan_petugas ?? '') == 'observasi' ? 'selected' : '' ?>>Observasi</option><option value="Konfirmasi" <?= strtolower($t->tindakan_petugas ?? '') == 'konfirmasi' ? 'selected' : '' ?>>Konfirmasi</option></select>
               </div>
               <div class="col-md-6 mb-3">
                   <label class="form-label text-muted">Status</label>
@@ -268,7 +268,7 @@
           <input type="hidden" name="id_cabang" value="<?= $filter_cabang ?>">
           <input type="hidden" name="id_unit" value="<?= $filter_unit ?>">
           <input type="hidden" name="id_jabatan" value="<?= $filter_jabatan ?>">
-          <div class="alert alert-info small">Silakan upload laporan WLA atau template Excel. Sistem otomatis membaca kolom Uraian Tugas, Hasil Kerja, dan Standar Waktu. Tugas yang diimport otomatis diterapkan ke seluruh bulan di tahun <?= $filter_tahun ?>.</div>
+          <div class="alert alert-info small">Silakan upload laporan WLA atau template Excel. Sistem otomatis membaca kolom Uraian Tugas, Hasil Kerja, dan Standar Waktu. Tugas yang diimport hanya akan masuk ke bulan yang sedang aktif (<?= $bulan_indo[(int)$filter_bulan] ?>).</div>
           <div class="mb-3"><label class="form-label">File Excel (.xlsx)</label><input type="file" name="file_excel" class="form-control" accept=".xlsx, .xls" required></div>
       </div>
       <div class="modal-footer border-0"><button class="btn btn-success">Mulai Import</button></div>
@@ -305,7 +305,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-delete', function(e) {
         e.preventDefault();
         var url = $(this).attr('href');
-        Swal.fire({ title: 'Nonaktifkan Tugas?', text: "Data tidak akan dihapus permanen, melainkan di set ke Nonaktif.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#6c757d', confirmButtonText: 'Ya, Nonaktifkan!' }).then((res) => { if (res.isConfirmed) window.location.href = url; });
+        Swal.fire({ title: 'Hapus Tugas?', text: "Data akan dihapus permanen dari sistem.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#6c757d', confirmButtonText: 'Ya, Hapus!' }).then((res) => { if (res.isConfirmed) window.location.href = url; });
     });
 
     // AJAX Filter Dropdowns

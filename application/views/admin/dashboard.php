@@ -30,10 +30,11 @@
   <div class="col-sm-6 col-lg-3">
     <div class="card glass p-3 border-0 shadow-sm h-100 rounded-4">
       <div class="d-flex align-items-center">
-        <div class="me-3 display-6 text-success"><i class="bi bi-person-check-fill"></i></div>
+        <div class="me-3 display-6 text-danger"><i class="bi bi-arrow-up-circle-fill"></i></div>
         <div>
-          <div class="small text-muted fw-bold">Total Jabatan</div>
-          <div class="h4 mb-0 fw-bold"><?= $total_jabatan ?? 0 ?></div>
+          <div class="small text-muted fw-bold">Jabatan Kritis (Over/Stretch)</div>
+          <?php $wla_data_arr = json_decode($wla_summary_data ?? '[]', true); ?>
+          <div class="h4 mb-0 fw-bold"><?= (int)($wla_data_arr[0] ?? 0) + (int)($wla_data_arr[1] ?? 0) ?></div>
         </div>
       </div>
     </div>
@@ -42,10 +43,10 @@
   <div class="col-sm-6 col-lg-3">
     <div class="card glass p-3 border-0 shadow-sm h-100 rounded-4">
       <div class="d-flex align-items-center">
-        <div class="me-3 display-6 text-info"><i class="bi bi-building"></i></div>
+        <div class="me-3 display-6 text-info"><i class="bi bi-arrow-down-circle-fill"></i></div>
         <div>
-          <div class="small text-muted fw-bold">Total Unit Kerja</div>
-          <div class="h4 mb-0 fw-bold"><?= $total_unit ?? 0 ?></div>
+          <div class="small text-muted fw-bold">Jabatan Underload</div>
+          <div class="h4 mb-0 fw-bold"><?= (int)($wla_data_arr[3] ?? 0) ?></div>
         </div>
       </div>
     </div>
@@ -58,7 +59,7 @@
             <span class="fw-bold text-dark"><?= $kepatuhan_persen ?? 0 ?>%</span>
         </div>
         <div class="progress mt-2" style="height: 10px;">
-            <div class="progress-bar" role="progressbar" style="width: <?= $kepatuhan_persen ?? 0 ?>%;" aria-valuenow="<?= $kepatuhan_persen ?? 0 ?>" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: <?= $kepatuhan_persen ?? 0 ?>%;" aria-valuenow="<?= $kepatuhan_persen ?? 0 ?>" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
     </div>
   </div>
